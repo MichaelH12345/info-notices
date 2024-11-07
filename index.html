@@ -90,7 +90,7 @@
 
     async function fetchMessages() {
         try {
-            const response = await fetch('https://national-rail-api.davwheat.dev/staffdepartures/WAT?expand=true');
+            const response = await fetch('https://national-rail-api.davwheat.dev/staffdepartures/CAR?expand=true');
             const data = await response.json();
 
             console.log("API Response:", data);
@@ -143,7 +143,7 @@
         const textBox = document.getElementById('message-text');
         const messageContent = textBox.innerHTML;
 
-        if (messageContent.length > 175) {
+        if (messageContent.length > 160) {
             const lineHeight = 48;
             const scrollByLines = 3;
             const visibleHeight = lineHeight * scrollByLines;
