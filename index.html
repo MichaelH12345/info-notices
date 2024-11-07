@@ -10,29 +10,25 @@
             src: url('https://raw.githubusercontent.com/MichaelH12345/tod/main/Tisa%20Sans%20Pro.ttf') format('truetype');
         }
 
-        /* Hide the entire page scrollbar */
-body {
-    overflow: hidden;
-}
+        body {
+            overflow: hidden;
+        }
 
         .page-container {
             width: 1920px;
             margin: 0 auto;
             position: relative;
-            
         }
 
-        /* Style for the original rounded rectangle */
         .rounded-rectangle {
             width: 1150px;
             height: 200px;
             border-radius: 25px;
-            background-color: #1c415e; /* Default color */
+            background-color: #1c415e;
             position: absolute;
             overflow: hidden;
         }
 
-        /* Style for the image inside the rectangle */
         .rectangle-image {
             position: absolute;
             top: 30px;
@@ -40,7 +36,6 @@ body {
             height: 75px;
         }
 
-        /* Style for the text box */
         .text-box {
             font-family: 'Tisa Sans Pro Medium', sans-serif;
             color: white;
@@ -51,37 +46,33 @@ body {
             left: 125px;
             width: 1005px;
             top: 25px;
-            transition: transform 0.5s ease; /* Smooth scrolling effect */
+            transition: transform 0.5s ease;
         }
 
-        /* New rounded rectangle with height 20px, 195px from top */
         .rounded-rectangle-small {
             width: 1095px;
             height: 25px;
             background-color: #1c415e;
             position: absolute;
-            top: 175px;  /* Positioned 195px from the top */
-            left: 25px;  /* Positioned 25px from the left */
+            top: 175px;
+            left: 25px;
             overflow: hidden;
         }
 
-        /* Another duplicate rectangle, 25px from top */
         .rounded-rectangle-small-2 {
             width: 1095px;
             height: 25px;
             background-color: #1c415e;
             position: absolute;
-            top: 0px;  /* Positioned 25px from the top */
-            left: 30px;  /* Positioned 25px from the left */
+            top: 0px;
+            left: 30px;
             overflow: hidden;
         }
-
     </style>
 </head>
 <body>
 
     <div class="page-container">
-        <!-- Original Rounded Rectangle -->
         <div class="rounded-rectangle" id="message-container">
             <img src="https://raw.githubusercontent.com/MichaelH12345/info-notices/main/info_blue.jpg" alt="Info Icon" class="rectangle-image" id="message-image">
             <div class="text-box" id="message-text">
@@ -89,103 +80,69 @@ body {
             </div>
         </div>
 
-        <!-- New Rounded Rectangle (20px height, positioned 195px from the top) -->
-        <div class="rounded-rectangle-small"></div>
-
-        <!-- Another Duplicate Rounded Rectangle (20px height, positioned 25px from the top) -->
-        <div class="rounded-rectangle-small-2"></div>
+        <div class="rounded-rectangle-small" id="small-rectangle-1"></div>
+        <div class="rounded-rectangle-small-2" id="small-rectangle-2"></div>
     </div>
 
-  <script>
+<script>
+    let currentMessageIndex = 0;
+    let messages = [];
+
     async function fetchMessages() {
         try {
-            const response = await fetch('https://national-rail-api.davwheat.dev/staffdepartures/CAR?expand=true');
+            const response = await fetch('https://national-rail-api.davwheat.dev/staffdepartures/WAT?expand=true');
             const data = await response.json();
 
-            // Output the full response to the console for debugging
             console.log("API Response:", data);
 
-if (data.nrccMessages && data.nrccMessages.length > 0) {
-    const sortedMessages = data.nrccMessages.sort((a, b) => b.severity - a.severity);
-    const highestSeverityMessage = sortedMessages[0].xhtmlMessage;
-
-    const highSeverityWords = ['up to', 'cancellations', 'revised', 'major', 'severe', 'severely', 'minor', 'delayed', 'cancelled', 'trains in', 'area'];
-    const mediumSeverityWords = ['engineering', 'work', 'ticket', 'closed'];
-
-    let backgroundColor = '#4b5d1f';
-    let imageUrl = 'https://raw.githubusercontent.com/MichaelH12345/info-notices/main/info_green.jpg';
-
-    // Count occurrences of high-severity and medium-severity words
-    const highSeverityCount = highSeverityWords.reduce((count, word) => 
-        count + (highestSeverityMessage.includes(word) ? 1 : 0), 0
-    );
-    const mediumSeverityCount = mediumSeverityWords.reduce((count, word) => 
-        count + (highestSeverityMessage.includes(word) ? 1 : 0), 0
-    );
-
-    // Determine which severity level has more matching words
-    if (highSeverityCount > mediumSeverityCount) {
-        backgroundColor = '#b06516';
-        imageUrl = 'https://raw.githubusercontent.com/MichaelH12345/info-notices/main/disruption_orange.jpg';
-    } else if (mediumSeverityCount > highSeverityCount) {
-        backgroundColor = '#1c415e';
-        imageUrl = 'https://raw.githubusercontent.com/MichaelH12345/info-notices/main/info_blue.jpg';
-    }
-
-    // Set the background color of the message container
-    const messageContainer = document.getElementById('message-container');
-    messageContainer.style.backgroundColor = backgroundColor;
-
-    // Set the background color for the smaller rectangles
-    const smallRectangle1 = document.querySelector('.rounded-rectangle-small');
-    const smallRectangle2 = document.querySelector('.rounded-rectangle-small-2');
-    smallRectangle1.style.backgroundColor = backgroundColor;
-    smallRectangle2.style.backgroundColor = backgroundColor;
-
-    // Set the image and text content
-    document.getElementById('message-image').src = imageUrl;
-    document.getElementById('message-text').innerHTML = processMessage(highestSeverityMessage);
-
-    scrollTextIfNeeded();
-} else {
-    // If nrccMessages is null or empty, show the default message
-    document.getElementById('message-text').innerHTML = "If you see something that doesn't look right, speak to station staff or text the British Transport Police on 61016. We'll sort it. See it. Say it. Sorted.";
-}
-
+            if (data.nrccMessages && data.nrccMessages.length > 0) {
+                messages = data.nrccMessages.sort((a, b) => b.severity - a.severity);
+                displayMessage(currentMessageIndex);
+            } else {
+                document.getElementById('message-text').innerText = "If you see something that doesn't look right, speak to station staff or text the British Transport Police on 61016. We'll sort it. See it. Say it. Sorted.";
+            }
         } catch (error) {
             console.error("Failed to fetch messages:", error);
             document.getElementById('message-text').innerText = "Error loading messages.";
         }
     }
 
+    function displayMessage(index) {
+        const messageData = messages[index];
+        const cleanedMessage = processMessage(messageData.xhtmlMessage);
+
+        const messageContainer = document.getElementById('message-container');
+        const backgroundColor = messageData.category === 0 ? '#b06516' : messageData.category === 1 ? '#1c415e' : '#4b5d1f';
+        const imageUrl = messageData.category === 0 ? 'https://raw.githubusercontent.com/MichaelH12345/info-notices/main/disruption_orange.jpg' : messageData.category === 1 ? 'https://raw.githubusercontent.com/MichaelH12345/info-notices/main/info_blue.jpg' : 'https://raw.githubusercontent.com/MichaelH12345/info-notices/main/info_green.jpg';
+
+        // Set the background color of the message container
+        messageContainer.style.backgroundColor = backgroundColor;
+
+        // Set the same background color for the smaller rectangles
+        document.getElementById('small-rectangle-1').style.backgroundColor = backgroundColor;
+        document.getElementById('small-rectangle-2').style.backgroundColor = backgroundColor;
+
+        // Set the image and the text
+        document.getElementById('message-image').src = imageUrl;
+        document.getElementById('message-text').innerHTML = cleanedMessage;
+
+        scrollTextIfNeeded();
+    }
+
     function processMessage(message) {
-        // Step 1: Remove newline characters
-        let cleanedMessage = message.replace(/\n/g, '');  // Removes \n
-
-        // Step 2: Remove any escaped Unicode characters (e.g., \u003C, \u003E)
+        let cleanedMessage = message.replace(/\n/g, '');
         cleanedMessage = cleanedMessage.replace(/\\u[0-9a-fA-F]{4}/g, '');
-
-        // Step 3: Remove <p> tags (both opening and closing)
         cleanedMessage = cleanedMessage.replace(/<p>/g, '').replace(/<\/p>/g, '');
-
-        // Step 4: Replace 'More details' or 'More Information' and anything after it
         cleanedMessage = cleanedMessage.replace(/(More details|More information|Latest).*/i, 'More details at nationalrail.co.uk.');
-
-        // Step 6: Add line break after colon (:) if present
-        cleanedMessage = cleanedMessage.replace(/:/g, ':<br>');  // Adds a line break after every colon
-
-        // Log the original and cleaned message for debugging
-        console.log("Original message:", message);
-        console.log("Cleaned message:", cleanedMessage);
+        cleanedMessage = cleanedMessage.replace(/:/g, ':<br>');
 
         return cleanedMessage;
     }
 
-function scrollTextIfNeeded() {
+    function scrollTextIfNeeded() {
         const textBox = document.getElementById('message-text');
         const messageContent = textBox.innerHTML;
 
-        // Check if the message is more than 150 characters
         if (messageContent.length > 175) {
             const lineHeight = 48;
             const scrollByLines = 3;
@@ -196,8 +153,7 @@ function scrollTextIfNeeded() {
 
             if (contentHeight > 0) {
                 let currentScroll = 0;
-
-                setInterval(() => {
+                let scrollInterval = setInterval(() => {
                     currentScroll += lineHeight * scrollByLines;
 
                     if (currentScroll >= totalHeight) {
@@ -205,14 +161,24 @@ function scrollTextIfNeeded() {
                     }
 
                     textBox.style.transform = `translateY(-${currentScroll}px)`;
+
+                    // Stop the interval if it scrolls to the bottom
+                    if (currentScroll === 0) {
+                        clearInterval(scrollInterval);
+                        setTimeout(switchMessage, 1000); // Wait 1 second before switching the message
+                    }
                 }, 7000);
             }
+        } else {
+            setTimeout(switchMessage, 7000); // If no scroll is needed, switch after 7 seconds
         }
     }
 
+    function switchMessage() {
+        currentMessageIndex = (currentMessageIndex + 1) % messages.length;
+        displayMessage(currentMessageIndex);
+    }
 
-
-    // Fetch and display messages on page load
     fetchMessages();
 </script>
 
